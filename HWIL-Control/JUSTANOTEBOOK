@@ -1,0 +1,8 @@
+                original_data_item = QTableWidgetItem(last_data[0])
+                address_item = QTableWidgetItem(str(last_data[0][2:8]))  # 字节信息的1, 2, 3字节
+                data_item = QTableWidgetItem(str(last_data[0][8:26]))  # 字节信息的5-12字节
+
+                # 将项目添加到相应的列中
+                self.TB_CANMsg.setItem(row_position, 0, original_data_item)
+                self.TB_CANMsg.setItem(row_position, 1, address_item)
+                self.TB_CANMsg.setItem(row_position, 2, data_item)
