@@ -12,7 +12,7 @@ from PyQt5.QtWebEngineWidgets import *
 
 from UI_HWIL import Ui_Form
 from PyQt5.QtCore import QDate
-import cli.xsdb as xsdb
+
 import os
 import subprocess
 import pandas as pd
@@ -56,7 +56,10 @@ class MyMainWindow(QMainWindow, Ui_Form):
         self.TB_SpooftingEditor.insertRow(1)
 
 
+        self.L_State.setStyleSheet("color: green;")
 
+
+        self.auto_injection_stop_flag = False
         # Global Variable
 
         self.controller_life_signal_last = "00"
@@ -294,6 +297,9 @@ class MyMainWindow(QMainWindow, Ui_Form):
         print("Stop Auto Inject")
         if self.auto_injection_timer.isActive():
             self.auto_injection_timer.stop()
+            #self.auto_injection_stop_flag = True
+            self.L_State.setText("State: No Auto Instance")
+            self.L_State.setStyleSheet("color: green;")
             print("Auto Injection stopped")
         else:
             print("Auto Injection is not activated")
@@ -309,7 +315,7 @@ class MyMainWindow(QMainWindow, Ui_Form):
         # init the attack timer
         self.auto_injection_timer = QTimer()
         self.auto_injection_timer.timeout.connect(self.auto_injection_excute_atk)
-        self.auto_injection_timer.start(10000)
+        self.auto_injection_timer.start(12000)
 
     def auto_injection_excute_atk(self):
         print("execute one atk")
@@ -318,22 +324,36 @@ class MyMainWindow(QMainWindow, Ui_Form):
             print(atk_unit)
             atk_type = atk_unit[1]
             atk_msg = atk_unit[2]
+
+            self.L_State.setText(atk_unit[3])
+            self.L_State.setStyleSheet("color: red;")
+
             if atk_type == "Dos":
                 print("execute dos atk by auto injection")
+
                 self.Btn_DosAttackOnClickListener()
             elif atk_type == "Spoofing":
                 print("execute Spoofing atk by auto injection")
-                self.auto_inject_msg = atk_msg
-                self.AutoSpoofing()
+                #self.auto_inject_msg = atk_msg
+                #self.AutoSpoofing()
+                self.TB_SpooftingEditor.setItem(1, 0, QTableWidgetItem((atk_msg)))
+
+                self.Btn_SpoofingOnClickListener()
+
             elif atk_type == "Replay":
                 print("execute Replay atk by auto injection")
-                self.auto_inject_msg = atk_msg
-                self.AutoSpoofing()
+
+                self.TB_SpooftingEditor.setItem(0, 0, QTableWidgetItem((atk_msg)))
+                self.Btn_ReplayOnclickListener()
+                #self.auto_inject_msg = atk_msg
+                #self.AutoReplay()
             else:
                 print("atk type not valid")
         else:
             print("Auto Injection Finished")
             self.auto_injection_timer.stop()
+            self.L_State.setText("State: No Auto Instance")
+            self.L_State.setStyleSheet("color: green;")
             if self.CB_Circular.isChecked():
                 print("Next Circular Auto Inject")
                 self.Btn_AutoInjectOnClickListener()
@@ -358,8 +378,19 @@ class MyMainWindow(QMainWindow, Ui_Form):
         self.SendMsg('*')
         self.recovery_timer2 = QTimer()
         self.recovery_timer2.setSingleShot(True)
-        self.recovery_timer2.timeout.connect(self.recover_global_variable)
+        self.recovery_timer2.timeout.connect(self.recover_global_variable_dos)
         self.recovery_timer2.start(8000)
+
+    def recover_global_variable_dos(self):
+        self.AtkFlag = "Normal"
+        command = "xsdb TclScripts/download.tcl"
+        try:
+            subprocess.run(command, shell=True, check=True)
+            print("reset ok")
+        except subprocess.CalledProcessError as e:
+            print("reset failed:", e)
+        self.parsed_data = []
+
 
     def Btn_SpoofingOnClickListener(self):
         print("Spoofing Attack on click")
@@ -418,9 +449,10 @@ class MyMainWindow(QMainWindow, Ui_Form):
             QMessageBox.critical(self, 'Error', 'Must Select a Message')
 
     def Replay_execute_attack(self):
-        replay_msg = self.TB_SpooftingEditor.item(0, 0)
+        replay_msg = self.TB_SpooftingEditor.item(0, 0).text()
+        print(replay_msg)
         if replay_msg is not None:
-            self.SendMsg('#' + replay_msg.text() + "$")
+            self.SendMsg('#' + replay_msg + "$")
             self.recovery_timer = QTimer()
             self.recovery_timer.setSingleShot(True)
             self.recovery_timer.timeout.connect(self.recover_global_variable)
@@ -443,6 +475,23 @@ class MyMainWindow(QMainWindow, Ui_Form):
             self.recovery_timer2.timeout.connect(self.recover_global_variable)
             self.recovery_timer2.start(1000)
 
+    def AutoReplay(self):
+        print("Replay attack")
+        self.AtkFlag = "Replay"
+        self.spoofing_timer = QTimer()
+        self.spoofing_timer.setSingleShot(True)
+        self.spoofing_timer.timeout.connect(self.AutoReplay_execute_attack)
+        self.spoofing_timer.start(1000)
+
+    def AutoReplay_execute_attack(self):
+        replay_msg = self.auto_inject_msg
+        if replay_msg is not None:
+            self.SendMsg('#' + replay_msg + "$")
+            self.recovery_timer2 = QTimer()
+            self.recovery_timer2.setSingleShot(True)
+            self.recovery_timer2.timeout.connect(self.recover_global_variable)
+            self.recovery_timer2.start(1000)
+
     def SpoofingAttack(self):
         print("Spoofing attack")
         replay_msg = self.TB_SpooftingEditor.item(1, 0)
@@ -456,9 +505,10 @@ class MyMainWindow(QMainWindow, Ui_Form):
             QMessageBox.critical(self, 'Error', 'Must Select a Message')
 
     def Spoofing_execute_attack(self):
-        replay_msg = self.TB_SpooftingEditor.item(1, 0)
+        replay_msg = self.TB_SpooftingEditor.item(1, 0).text()
+        print(replay_msg)
         if replay_msg is not None:
-            self.SendMsg('#' + replay_msg.text() + "$")
+            self.SendMsg('#' + replay_msg + "$")
             self.recovery_timer2 = QTimer()
             self.recovery_timer2.setSingleShot(True)
             self.recovery_timer2.timeout.connect(self.recover_global_variable)
@@ -603,6 +653,9 @@ class MyMainWindow(QMainWindow, Ui_Form):
     def receive_data_analysis(self):
         # check which host it belongs to
         last_data = self.parsed_data[-1]
+
+        if len(last_data[0]) != 26:
+            return
 
         address = str(last_data[0][2:8])  # 字节信息的1, 2, 3字节
         data_item = str(last_data[0][8:26])  # 字节信息的5-12字节

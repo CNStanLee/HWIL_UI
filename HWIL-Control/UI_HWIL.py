@@ -144,6 +144,12 @@ class Ui_Form(object):
         self.L_Attacker.setGeometry(QtCore.QRect(580, 70, 67, 17))
         self.L_Attacker.setFrameShape(QtWidgets.QFrame.Box)
         self.L_Attacker.setObjectName("L_Attacker")
+
+        self.L_State = QtWidgets.QLabel(Form)
+        self.L_State.setGeometry(QtCore.QRect(880, 70, 200, 50))
+        self.L_State.setFrameShape(QtWidgets.QFrame.Box)
+        self.L_State.setObjectName("L_State")
+
         self.L_ECU1 = QtWidgets.QLabel(Form)
         self.L_ECU1.setGeometry(QtCore.QRect(260, 70, 67, 17))
         self.L_ECU1.setFrameShape(QtWidgets.QFrame.Box)
@@ -359,6 +365,10 @@ class Ui_Form(object):
         item.setText(_translate("Form", "AtkTag"))
         self.L_CANMessageList.setText(_translate("Form", "CAN Message List"))
         self.L_Attacker.setText(_translate("Form", "Attacker"))
+
+        self.L_State.setText(_translate("Form", "State: No Auto Instance"))
+
+
         self.L_ECU1.setText(_translate("Form", "ECU1"))
         self.L_ECU2.setText(_translate("Form", "ECU2"))
         self.L_ECU3.setText(_translate("Form", "ECU3"))
