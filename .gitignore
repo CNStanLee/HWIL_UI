@@ -1,0 +1,5 @@
+# ignore vcd files
+*.vcd
+# vscode and idea
+.vscode
+.idea
