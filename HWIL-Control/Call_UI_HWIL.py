@@ -677,19 +677,19 @@ class MyMainWindow(QMainWindow, Ui_Form):
         life_signal = data_frame[0][10:12]
         self.ecu1_life_signal_last = life_signal
         # check ECU Status
-        ECU_Status = bool((int(data_frame[0][12:14], 16) >> 7) & 0x01)
+        ECU_Status = bool((int(data_frame[0][12:14], 16) >> 0) & 0x01)
         if ECU_Status & self.ecu1_life_signal_bl:
             self.L_ECU.setStyleSheet("background-color: green")
         else:
             self.L_ECU.setStyleSheet("")
         # check TCU Status
-        TCU_Status = bool((int(data_frame[0][14:16], 16) >> 7) & 0x01)
+        TCU_Status = bool((int(data_frame[0][14:16], 16) >> 0) & 0x01)
         if TCU_Status & self.ecu1_life_signal_bl:
             self.L_TCU.setStyleSheet("background-color: green")
         else:
             self.L_TCU.setStyleSheet("")
         # check Braker Status
-        Braker_Status = bool((int(data_frame[0][16:18], 16) >> 7) & 0x01)
+        Braker_Status = bool((int(data_frame[0][16:18], 16) >> 0) & 0x01)
         if Braker_Status & self.ecu1_life_signal_bl:
             self.L_Braker.setStyleSheet("background-color: green")
         else:
@@ -700,13 +700,13 @@ class MyMainWindow(QMainWindow, Ui_Form):
         life_signal = data_frame[0][10:12]
         self.ecu2_life_signal_last = life_signal
         # check AirBag Status
-        AirBag_Status = bool((int(data_frame[0][12:14], 16) >> 7) & 0x01)
+        AirBag_Status = bool((int(data_frame[0][12:14], 16) >> 0) & 0x01)
         if AirBag_Status & self.ecu2_life_signal_bl:
             self.L_Airbag.setStyleSheet("background-color: green")
         else:
             self.L_Airbag.setStyleSheet("")
         # check SCL Status
-        SLC_Status = bool((int(data_frame[0][14:16], 16) >> 7) & 0x01)
+        SLC_Status = bool((int(data_frame[0][14:16], 16) >> 0) & 0x01)
         if SLC_Status & self.ecu2_life_signal_bl:
             self.L_Slight.setStyleSheet("background-color: green")
         else:
@@ -717,31 +717,31 @@ class MyMainWindow(QMainWindow, Ui_Form):
         life_signal = data_frame[0][10:12]
         self.ecu3_life_signal_last = life_signal
         # check CDS Status
-        CDS = bool((int(data_frame[0][12:14], 16) >> 7) & 0x01)
+        CDS = bool((int(data_frame[0][12:14], 16) >> 0) & 0x01)
         if CDS & self.ecu3_life_signal_bl:
             self.L_Collision.setStyleSheet("background-color: green")
         else:
             self.L_Collision.setStyleSheet("")
         # check BDS Status
-        BDS = bool((int(data_frame[0][14:16], 16) >> 7) & 0x01)
+        BDS = bool((int(data_frame[0][14:16], 16) >> 0) & 0x01)
         if BDS & self.ecu3_life_signal_bl:
             self.L_Brake.setStyleSheet("background-color: green")
         else:
             self.L_Brake.setStyleSheet("")
         # check SLB
-        SLB = bool((int(data_frame[0][16:18], 16) >> 7) & 0x01)
+        SLB = bool((int(data_frame[0][16:18], 16) >> 2) & 0x01)
         if SLB & self.ecu3_life_signal_bl:
             self.L_Steering.setStyleSheet("background-color: green")
         else:
             self.L_Steering.setStyleSheet("")
         # check FLB
-        FLB = bool((int(data_frame[0][16:18], 16) >> 6) & 0x01)
+        FLB = bool((int(data_frame[0][16:18], 16) >> 1) & 0x01)
         if FLB & self.ecu3_life_signal_bl:
             self.L_FLightB.setStyleSheet("background-color: green")
         else:
             self.L_FLightB.setStyleSheet("")
         # check BLB
-        BLB = bool((int(data_frame[0][16:18], 16) >> 5) & 0x01)
+        BLB = bool((int(data_frame[0][16:18], 16) >> 0) & 0x01)
         if BLB & self.ecu3_life_signal_bl:
             self.L_BLightB.setStyleSheet("background-color: green")
         else:
