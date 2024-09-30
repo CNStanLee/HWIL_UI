@@ -4,17 +4,17 @@ targets -set -nocase -filter {name =~ "*microblaze*#5" && bscan=="USER2" }
 rst -system
 after 1000
 targets -set -nocase -filter {name =~ "*microblaze*#5" && bscan=="USER2" }
-dow TclScripts/DestCode/mb_dos_app.elf
+dow TclScripts/DestCode/dos.elf
 targets -set -nocase -filter {name =~ "*microblaze*#4" && bscan=="USER2" }
-dow TclScripts/DestCode/mb_finn_app.elf
+dow TclScripts/DestCode/finn.elf
 targets -set -nocase -filter {name =~ "*microblaze*#0" && bscan=="USER2" }
-dow TclScripts/DestCode/mb0_ctr_node.elf
+dow TclScripts/DestCode/hwil_app.elf
 targets -set -nocase -filter {name =~ "*microblaze*#1" && bscan=="USER2" }
-dow TclScripts/DestCode/mb1_ecu1_app.elf
+dow TclScripts/DestCode/ecu1.elf
 targets -set -nocase -filter {name =~ "*microblaze*#2" && bscan=="USER2" }
-dow TclScripts/DestCode/mb2_ecu2_app.elf
+dow TclScripts/DestCode/ecu2.elf
 targets -set -nocase -filter {name =~ "*microblaze*#3" && bscan=="USER2" }
-dow TclScripts/DestCode/mb3_ecu3_app.elf
+dow TclScripts/DestCode/ecu3.elf
 targets -set -nocase -filter {name =~ "*microblaze*#5" && bscan=="USER2" }
 con
 targets -set -nocase -filter {name =~ "*microblaze*#4" && bscan=="USER2" }
