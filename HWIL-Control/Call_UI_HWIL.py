@@ -74,6 +74,12 @@ class MyMainWindow(QMainWindow, Ui_Form):
         self.ecu3_life_signal_last2 = "00"
         self.ecu4_life_signal_last2 = "00"
 
+        self.controller_life_signal_last3 = "00"
+        self.ecu1_life_signal_last3 = "00"
+        self.ecu2_life_signal_last3 = "00"
+        self.ecu3_life_signal_last3 = "00"
+        self.ecu4_life_signal_last3 = "00"
+
         self.controller_life_signal_bl = False
         self.ecu1_life_signal_bl = False
         self.ecu2_life_signal_bl = False
@@ -161,11 +167,11 @@ class MyMainWindow(QMainWindow, Ui_Form):
         self.ecu3_life_signal_bl = False
         self.ecu4_life_signal_bl = False
 
-        self.controller_life_signal_bl = (self.controller_life_signal_last2 != self.controller_life_signal_last)
-        self.ecu1_life_signal_bl = self.ecu1_life_signal_last2 != self.ecu1_life_signal_last
-        self.ecu2_life_signal_bl = self.ecu2_life_signal_last2 != self.ecu2_life_signal_last
-        self.ecu3_life_signal_bl = self.ecu3_life_signal_last2 != self.ecu3_life_signal_last
-        self.ecu4_life_signal_bl = self.ecu4_life_signal_last2 != self.ecu4_life_signal_last
+        self.controller_life_signal_bl = ((self.controller_life_signal_last2 != self.controller_life_signal_last) | (self.controller_life_signal_last3 != self.controller_life_signal_last2))
+        self.ecu1_life_signal_bl = ((self.ecu1_life_signal_last2 != self.ecu1_life_signal_last      ) | (self.ecu1_life_signal_last3 != self.ecu1_life_signal_last))
+        self.ecu2_life_signal_bl = ((self.ecu2_life_signal_last2 != self.ecu2_life_signal_last    ) | (self.ecu2_life_signal_last3 != self.ecu2_life_signal_last))
+        self.ecu3_life_signal_bl = ((self.ecu3_life_signal_last2 != self.ecu3_life_signal_last      ) | (self.ecu3_life_signal_last3 != self.ecu3_life_signal_last))
+        self.ecu4_life_signal_bl = ((self.ecu4_life_signal_last2 != self.ecu4_life_signal_last      ) | (self.ecu4_life_signal_last3 != self.ecu4_life_signal_last))
 
         if self.ecu1_life_signal_bl:
             self.L_Life1.setStyleSheet("background-color: green")
@@ -197,6 +203,13 @@ class MyMainWindow(QMainWindow, Ui_Form):
         self.ecu2_life_signal_last2 = self.ecu2_life_signal_last
         self.ecu3_life_signal_last2 = self.ecu3_life_signal_last
         self.ecu4_life_signal_last2 = self.ecu4_life_signal_last
+
+        self.controller_life_signal_last3 = self.controller_life_signal_last2
+        self.ecu1_life_signal_last3 = self.ecu1_life_signal_last2
+        self.ecu2_life_signal_last3 = self.ecu2_life_signal_last2
+        self.ecu3_life_signal_last3 = self.ecu3_life_signal_last2
+        self.ecu4_life_signal_last3 = self.ecu4_life_signal_last2
+        
 
     def CreateItems(self):
         # Qt 串口类
