@@ -93,7 +93,7 @@ class MyMainWindow(QMainWindow, Ui_Form):
         self.timer.timeout.connect(self.check_variable_changes)
 
         # 启动定时器，每秒触发一次
-        self.timer.start(1000)  # 1000毫秒 = 1秒
+        self.timer.start(1200)  # 1000毫秒 = 1秒
 
         # buffer solve
         self.variable = None
@@ -113,6 +113,37 @@ class MyMainWindow(QMainWindow, Ui_Form):
         self.auto_inject_msg = ""
 
         self.auto_injection_timer = QTimer()
+
+
+        # make ecu status stable
+        # 状态稳定确认计数器
+        self.ecu_status_counter = 0
+        self.tcu_status_counter = 0
+        self.braker_status_counter = 0
+
+        # 状态变化的阈值（如5次确认后更新状态）
+        self.stable_threshold = 1
+
+        # 初始状态
+        self.last_ecu_status = None
+        self.last_tcu_status = None
+        self.last_braker_status = None
+
+        self.last_airbag_status = None  # Cache for AirBag status
+        self.last_scl_status = None  # Cache for SCL status
+
+        self.last_cds_status = None  # Cache for CDS (Collision Detection System) status
+        self.last_bds_status = None  # Cache for BDS (Brake Detection System) status
+        self.last_slb_status = None  # Cache for SLB (Steering Light B) status
+        self.last_flb_status = None  # Cache for FLB (Front Light B) status
+        self.last_blb_status = None  # Cache for BLB (Back Light B) status
+
+        self.ecu_status_stable_count = 0  # Tracks stability for ECU status
+        self.tcu_status_stable_count = 0  # Tracks stability for TCU status
+        self.braker_status_stable_count = 0  # Tracks stability for Braker status
+
+        self.check_times = 3
+
 
 
     def check_msg(self):
@@ -198,17 +229,19 @@ class MyMainWindow(QMainWindow, Ui_Form):
             self.L_FLightB.setStyleSheet("")
             self.L_BLightB.setStyleSheet("")
 
+        self.controller_life_signal_last3 = self.controller_life_signal_last2
+        self.ecu1_life_signal_last3 = self.ecu1_life_signal_last2
+        self.ecu2_life_signal_last3 = self.ecu2_life_signal_last2
+        self.ecu3_life_signal_last3 = self.ecu3_life_signal_last2
+        self.ecu4_life_signal_last3 = self.ecu4_life_signal_last2
+
         self.controller_life_signal_last2 = self.controller_life_signal_last
         self.ecu1_life_signal_last2 = self.ecu1_life_signal_last
         self.ecu2_life_signal_last2 = self.ecu2_life_signal_last
         self.ecu3_life_signal_last2 = self.ecu3_life_signal_last
         self.ecu4_life_signal_last2 = self.ecu4_life_signal_last
 
-        self.controller_life_signal_last3 = self.controller_life_signal_last2
-        self.ecu1_life_signal_last3 = self.ecu1_life_signal_last2
-        self.ecu2_life_signal_last3 = self.ecu2_life_signal_last2
-        self.ecu3_life_signal_last3 = self.ecu3_life_signal_last2
-        self.ecu4_life_signal_last3 = self.ecu4_life_signal_last2
+
         
 
     def CreateItems(self):
@@ -285,26 +318,6 @@ class MyMainWindow(QMainWindow, Ui_Form):
         self.TB_CANMsg.clearContents()
         self.parsed_data.clear()
         self.TB_CANMsg.setRowCount(0)
-    # def Btn_ExportDataOnClickListener(self):
-    #     print("Export Dataset")
-    #     # 获取表格的行数和列数
-    #     row_count = self.TB_CANMsg.rowCount()
-    #     column_count = self.TB_CANMsg.columnCount()
-    #
-    #     # 提取第二列和第三列的数据
-    #     column0_data = []
-    #     column3_data = []
-    #     for row in range(row_count):
-    #         column0_data.append(self.TB_CANMsg.item(row, 0).text())
-    #         column3_data.append(self.TB_CANMsg.item(row, 3).text())
-    #
-    #     df = pd.DataFrame({'Data': column0_data, 'Type': column3_data})
-    #     df.to_csv('Dataset/export_data.csv', index=True)
-    #     print("clear data list")
-    #     self.TB_CANMsg.clearContents()
-    #     self.parsed_data.clear()
-    #     self.TB_CANMsg.setRowCount(0)
-
 
     def Btn_StopInjectOnClickListener(self):
         print("Stop Auto Inject")
@@ -352,6 +365,13 @@ class MyMainWindow(QMainWindow, Ui_Form):
                 self.TB_SpooftingEditor.setItem(1, 0, QTableWidgetItem((atk_msg)))
 
                 self.Btn_SpoofingOnClickListener()
+            elif atk_type == "Fuzzing":
+                print("execute Spoofing atk by auto injection")
+                #self.auto_inject_msg = atk_msg
+                #self.AutoSpoofing()
+                self.TB_SpooftingEditor.setItem(1, 0, QTableWidgetItem((atk_msg)))
+
+                self.Btn_FuzzingOnClickListener()
 
             elif atk_type == "Replay":
                 print("execute Replay atk by auto injection")
@@ -375,6 +395,8 @@ class MyMainWindow(QMainWindow, Ui_Form):
     def Btn_DownloadOnClickListener(self):
         print("download program to the ecus")
         command = "xsdb TclScripts/download.tcl"
+        # print current path
+        print(os.getcwd())
         try:
             subprocess.run(command, shell=True, check=True)
             print("download ok")
@@ -392,22 +414,26 @@ class MyMainWindow(QMainWindow, Ui_Form):
         self.recovery_timer2 = QTimer()
         self.recovery_timer2.setSingleShot(True)
         self.recovery_timer2.timeout.connect(self.recover_global_variable_dos)
-        self.recovery_timer2.start(8000)
+        self.recovery_timer2.start(15000)
 
     def recover_global_variable_dos(self):
         self.AtkFlag = "Normal"
         command = "xsdb TclScripts/download.tcl"
-        try:
-            subprocess.run(command, shell=True, check=True)
-            print("reset ok")
-        except subprocess.CalledProcessError as e:
-            print("reset failed:", e)
-        self.parsed_data = []
+        # try:
+        #     subprocess.run(command, shell=True, check=True)
+        #     print("reset ok")
+        # except subprocess.CalledProcessError as e:
+        #     print("reset failed:", e)
+        # self.parsed_data = []
 
 
     def Btn_SpoofingOnClickListener(self):
         print("Spoofing Attack on click")
         self.SpoofingAttack()
+
+    def Btn_FuzzingOnClickListener(self):
+        print("Fuzzing Attack on click")
+        self.FuzzingAttack()
     def Btn_ReplayOnclickListener(self):
         print("Replay Attack on click")
         self.ReplayAttack()
@@ -517,6 +543,18 @@ class MyMainWindow(QMainWindow, Ui_Form):
         else:
             QMessageBox.critical(self, 'Error', 'Must Select a Message')
 
+    def FuzzingAttack(self):
+        print("Fuzzing attack")
+        replay_msg = self.TB_SpooftingEditor.item(1, 0)
+        if replay_msg is not None:
+            self.AtkFlag = "Fuzzing"
+            self.spoofing_timer = QTimer()
+            self.spoofing_timer.setSingleShot(True)
+            self.spoofing_timer.timeout.connect(self.Spoofing_execute_attack)
+            self.spoofing_timer.start(1000)
+        else:
+            QMessageBox.critical(self, 'Error', 'Must Select a Message')
+
     def Spoofing_execute_attack(self):
         replay_msg = self.TB_SpooftingEditor.item(1, 0).text()
         print(replay_msg)
@@ -541,16 +579,6 @@ class MyMainWindow(QMainWindow, Ui_Form):
         self.TB_CANMsg.clearContents()
         self.parsed_data.clear()
         self.TB_CANMsg.setRowCount(0)
-
-    # 跳转到 GitHub 查看源代码
-    # def Goto_GitHub(self):
-    #     self.browser = QWebEngineView()
-    #     self.browser.load(QUrl('https://github.com/Oslomayor/PyQt5-SerialPort-Stable'))
-    #     self.setCentralWidget(self.browser)
-
-    # 显示时间
-    # def ShowTime(self):
-    #     self.Time_Label.setText(time.strftime("%B %d, %H:%M:%S", time.localtime()))
 
     # Serial Send data
     def Com_Send_Data(self):
@@ -689,76 +717,128 @@ class MyMainWindow(QMainWindow, Ui_Form):
         # check life signal
         life_signal = data_frame[0][10:12]
         self.ecu1_life_signal_last = life_signal
+
         # check ECU Status
         ECU_Status = bool((int(data_frame[0][12:14], 16) >> 0) & 0x01)
-        if ECU_Status & self.ecu1_life_signal_bl:
-            self.L_ECU.setStyleSheet("background-color: green")
+        if ECU_Status == self.last_ecu_status:
+            self.ecu_status_stable_count += 1
         else:
-            self.L_ECU.setStyleSheet("")
+            self.ecu_status_stable_count = 0
+
+        if self.ecu_status_stable_count >= self.check_times:
+            if ECU_Status & self.ecu1_life_signal_bl:
+                self.L_ECU.setStyleSheet("background-color: green")
+            else:
+                self.L_ECU.setStyleSheet("")
+
         # check TCU Status
         TCU_Status = bool((int(data_frame[0][14:16], 16) >> 0) & 0x01)
-        if TCU_Status & self.ecu1_life_signal_bl:
-            self.L_TCU.setStyleSheet("background-color: green")
+        if TCU_Status == self.last_tcu_status:
+            self.tcu_status_stable_count += 1
         else:
-            self.L_TCU.setStyleSheet("")
+            self.tcu_status_stable_count = 0
+
+        if self.tcu_status_stable_count >= self.check_times:
+            if TCU_Status & self.ecu1_life_signal_bl:
+                self.L_TCU.setStyleSheet("background-color: green")
+            else:
+                self.L_TCU.setStyleSheet("")
+
         # check Braker Status
         Braker_Status = bool((int(data_frame[0][16:18], 16) >> 0) & 0x01)
-        if Braker_Status & self.ecu1_life_signal_bl:
-            self.L_Braker.setStyleSheet("background-color: green")
+        if Braker_Status == self.last_braker_status:
+            self.braker_status_stable_count += 1
         else:
-            self.L_Braker.setStyleSheet("")
+            self.braker_status_stable_count = 0
+
+        if self.braker_status_stable_count >= self.check_times:
+            if Braker_Status & self.ecu1_life_signal_bl:
+                self.L_Braker.setStyleSheet("background-color: green")
+            else:
+                self.L_Braker.setStyleSheet("")
+
+        # Update last status variables
+        self.last_ecu_status = ECU_Status
+        self.last_tcu_status = TCU_Status
+        self.last_braker_status = Braker_Status
+
 
     def ecu2_data_process(self, data_frame):
         # check life signal
         life_signal = data_frame[0][10:12]
         self.ecu2_life_signal_last = life_signal
+
         # check AirBag Status
         AirBag_Status = bool((int(data_frame[0][12:14], 16) >> 0) & 0x01)
-        if AirBag_Status & self.ecu2_life_signal_bl:
-            self.L_Airbag.setStyleSheet("background-color: green")
-        else:
-            self.L_Airbag.setStyleSheet("")
+        if AirBag_Status == self.last_airbag_status:
+            if AirBag_Status & self.ecu2_life_signal_bl:
+                self.L_Airbag.setStyleSheet("background-color: green")
+            else:
+                self.L_Airbag.setStyleSheet("")
+        
         # check SCL Status
         SLC_Status = bool((int(data_frame[0][14:16], 16) >> 0) & 0x01)
-        if SLC_Status & self.ecu2_life_signal_bl:
-            self.L_Slight.setStyleSheet("background-color: green")
-        else:
-            self.L_Slight.setStyleSheet("")
+        if SLC_Status == self.last_scl_status:
+            if SLC_Status & self.ecu2_life_signal_bl:
+                self.L_Slight.setStyleSheet("background-color: green")
+            else:
+                self.L_Slight.setStyleSheet("")
+
+        # Update the last status variables
+        self.last_airbag_status = AirBag_Status
+        self.last_scl_status = SLC_Status
 
     def ecu3_data_process(self, data_frame):
         # check life signal
         life_signal = data_frame[0][10:12]
         self.ecu3_life_signal_last = life_signal
+
         # check CDS Status
-        CDS = bool((int(data_frame[0][12:14], 16) >> 0) & 0x01)
-        if CDS & self.ecu3_life_signal_bl:
-            self.L_Collision.setStyleSheet("background-color: green")
-        else:
-            self.L_Collision.setStyleSheet("")
+        CDS_Status = bool((int(data_frame[0][12:14], 16) >> 0) & 0x01)
+        if CDS_Status == self.last_cds_status:
+            if CDS_Status & self.ecu3_life_signal_bl:
+                self.L_Collision.setStyleSheet("background-color: green")
+            else:
+                self.L_Collision.setStyleSheet("")
+        
         # check BDS Status
-        BDS = bool((int(data_frame[0][14:16], 16) >> 0) & 0x01)
-        if BDS & self.ecu3_life_signal_bl:
-            self.L_Brake.setStyleSheet("background-color: green")
-        else:
-            self.L_Brake.setStyleSheet("")
-        # check SLB
-        SLB = bool((int(data_frame[0][16:18], 16) >> 2) & 0x01)
-        if SLB & self.ecu3_life_signal_bl:
-            self.L_Steering.setStyleSheet("background-color: green")
-        else:
-            self.L_Steering.setStyleSheet("")
-        # check FLB
-        FLB = bool((int(data_frame[0][16:18], 16) >> 1) & 0x01)
-        if FLB & self.ecu3_life_signal_bl:
-            self.L_FLightB.setStyleSheet("background-color: green")
-        else:
-            self.L_FLightB.setStyleSheet("")
-        # check BLB
-        BLB = bool((int(data_frame[0][16:18], 16) >> 0) & 0x01)
-        if BLB & self.ecu3_life_signal_bl:
-            self.L_BLightB.setStyleSheet("background-color: green")
-        else:
-            self.L_BLightB.setStyleSheet("")
+        BDS_Status = bool((int(data_frame[0][14:16], 16) >> 0) & 0x01)
+        if BDS_Status == self.last_bds_status:
+            if BDS_Status & self.ecu3_life_signal_bl:
+                self.L_Brake.setStyleSheet("background-color: green")
+            else:
+                self.L_Brake.setStyleSheet("")
+        
+        # check SLB (Steering Light B)
+        SLB_Status = bool((int(data_frame[0][16:18], 16) >> 2) & 0x01)
+        if SLB_Status == self.last_slb_status:
+            if SLB_Status & self.ecu3_life_signal_bl:
+                self.L_Steering.setStyleSheet("background-color: green")
+            else:
+                self.L_Steering.setStyleSheet("")
+
+        # check FLB (Front Light B)
+        FLB_Status = bool((int(data_frame[0][16:18], 16) >> 1) & 0x01)
+        if FLB_Status == self.last_flb_status:
+            if FLB_Status & self.ecu3_life_signal_bl:
+                self.L_FLightB.setStyleSheet("background-color: green")
+            else:
+                self.L_FLightB.setStyleSheet("")
+
+        # check BLB (Back Light B)
+        BLB_Status = bool((int(data_frame[0][16:18], 16) >> 0) & 0x01)
+        if BLB_Status == self.last_blb_status:
+            if BLB_Status & self.ecu3_life_signal_bl:
+                self.L_BLightB.setStyleSheet("background-color: green")
+            else:
+                self.L_BLightB.setStyleSheet("")
+
+        # Update the last status variables
+        self.last_cds_status = CDS_Status
+        self.last_bds_status = BDS_Status
+        self.last_slb_status = SLB_Status
+        self.last_flb_status = FLB_Status
+        self.last_blb_status = BLB_Status
 
 
 if __name__ == '__main__':

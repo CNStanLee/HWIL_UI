@@ -1,8 +1,11 @@
 No,Type,Msg,Ins
-1,Replay,88060606f80e80000080000000,Replay Collision occurs
-2,Spoofing,88060606f88100000080000000,Spoofing Collision ends
-3,Replay,88060606f8c500800080000000,Replay Brake occurs
-4,Spoofing,88060606f86f00000080000000,Spoofing Brake ends
-5,Dos,88000000f80000000000000000,Dos attack
+1,Fuzzing,88123567f80052256236767842,Fuzzing attack
+2,Spoofing,88060606f8452900f0012400ff,Spoofing Collision occurs
+3,Spoofing,88060606f8452800f0012400ff,Spoofing Collision ends
+4,Spoofing,88060606f8452801f0012400ff,Spoofing Brake occurs
+5,Spoofing,88060606f8452800f0012400ff,Spoofing Brake ends
+6,Dos,88000000f80000000000000000,Dos attack
+
+
 
 
