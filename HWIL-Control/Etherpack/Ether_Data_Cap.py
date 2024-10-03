@@ -2,6 +2,7 @@ from scapy.all import sniff, Ether
 from vcd.writer import VCDWriter
 
 
+# sudo /home/labuser/anaconda3/envs/pyqt0930/bin/python /home/labuser/temp_changhong_2024_09_30/HWIL_UI/HWIL-Control/Etherpack/Ether_Data_Cap.py
 # sudo /home/temporary/.conda/envs/changhong/bin/python Ether_Data_Cap.py
 # 
 
@@ -9,6 +10,9 @@ from vcd.writer import VCDWriter
 #target_mac = "00:11:22:33:44:55"  # Replace with the MAC address you want to monitor
 # target_mac = "da:02:03:04:05:06"  # Replace with the MAC address you want to monitor
 source_mac = "5a:02:03:04:05:06"
+#source_mac = "3c:18:a0:05:cb:ea"
+
+int_name = "enx3c18a005cbea"
 
 # Open the VCD file and create a writer
 vcd_file = open("network_data.vcd", "w")
@@ -89,7 +93,7 @@ def packet_callback(packet):
 # Start sniffing packets on the specified interface (replace 'WLAN' with your interface)
 try:
     # sniff(iface="WLAN", prn=packet_callback)
-    sniff(iface="eno2", prn=packet_callback)
+    sniff(iface=int_name, prn=packet_callback)
 except KeyboardInterrupt:
     # Handle user interruption (Ctrl+C)
     print("Interrupted by user")
